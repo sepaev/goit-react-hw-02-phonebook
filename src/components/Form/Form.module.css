@@ -1,0 +1,12 @@
+.inputNumber {
+  display: block;
+  margin-bottom: 20px;
+  font-size: 22px;
+  outline: unset;
+}
+
+.inputNumber:focus,
+.inputNumber:hover {
+  filter: drop-shadow(0px 0px 5px lightblue);
+  border: 1px solid lightblue;
+}
