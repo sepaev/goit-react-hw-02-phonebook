@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import InputMask from 'react-input-mask';
 import css from './Form.module.css';
 
-export class Form extends Component {
+class Form extends Component {
   render() {
     const { onSubmit } = this.props;
     return (
@@ -43,6 +43,7 @@ export class Form extends Component {
   }
 }
 
+export default Form;
 Form.propTypes = {
   onSubmit: PropTypes.func.isRequired,
 };

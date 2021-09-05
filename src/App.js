@@ -1,12 +1,11 @@
 import { Component, Fragment } from 'react';
-import { Form } from './components/Form/Form';
-import { Contacts } from './components/Contacts/Contacts';
-import { Section } from './components/Section/Section';
 import { v4 as uuidv4 } from 'uuid';
+import { Section } from './components/Section/Section';
+
 import { Notify } from 'notiflix';
 Notify.init({ position: 'center-top' });
 
-export class App extends Component {
+class App extends Component {
   state = {
     contacts: [
       { id: uuidv4(), name: 'Rosie Simpson', number: '+38 (050) 459-12-56' },
@@ -24,6 +23,11 @@ export class App extends Component {
       const newArr = [...contacts, { id: uuidv4(), name, number }];
       return { contacts: newArr, filter };
     });
+  };
+
+  makeSearch = e => {
+    const searchQuery = e.target.value.toLocaleLowerCase();
+    this.setState({ filter: searchQuery });
   };
 
   doDeleteContact = id => {
@@ -52,146 +56,26 @@ export class App extends Component {
     Notify.success(`Contact ${reportName} was errased successfully`);
   };
 
-  checkNumber(inputNumber) {
-    const clearNumber = this.doClearNumber(inputNumber);
-    let result = true;
-    if (inputNumber === '') result = false;
-    this.state.contacts.forEach(({ number }) => {
-      if (clearNumber === this.doClearNumber(number)) result = false;
-    });
-
-    return result;
-  }
-  checkName(inputName) {
-    let result = true;
-    const clearName = this.doClearName(inputName);
-    if (clearName === '') result = false;
-    this.state.contacts.forEach(({ name }) => {
-      if (clearName === this.doClearName(name)) result = false;
-    });
-    return result;
-  }
-  onSubmit = e => {
-    e.preventDefault();
-    const inputName = e.target.children[0].children[1].value.trim();
-    const inputNumber = e.target.children[1].children[1].value;
-    if (!this.checkNumber(inputNumber)) {
-      if (inputNumber) Notify.warning('Sorry. This NUMBER already exists.');
-      return;
-    }
-    if (!this.checkName(inputName)) {
-      // if (inputName) Notify.warning('Sorry. This NAME already exists.');
-      Notify.warning('Sorry. This NAME already exists.');
-      return;
-    }
-    this.doAddContact(inputName, inputNumber);
-  };
-
-  countContacts = (target = this.state.contacts) => {
-    return target.length;
-  };
-
-  makeSearch = e => {
-    const searchQuery = e.target.value.toLocaleLowerCase();
-
-    this.setState({ filter: searchQuery });
-  };
-
-  doClearNumber = number => {
-    const noSpace = number.split(' ').join('');
-    const noBracket = noSpace.split('(').join('').split(')').join('');
-    const noSign = noBracket.split('-').join('').split('+').join('');
-    return noSign;
-  };
-
-  doClearName(name) {
-    return name.split(' ').join('').toLowerCase().trim();
-  }
-
-  parseSearchQuery(searchQuery) {
-    let searchQueryText = '';
-    let searchQueryNumber = '';
-    if (searchQuery) {
-      if (searchQuery.match(/\d+/)) {
-        searchQueryNumber = searchQuery.match(/\d+/).toString();
-        const queries = searchQuery.split(searchQueryNumber);
-        const query = queries[0] || queries[1];
-        searchQueryText = query ? query : '';
-      } else {
-        searchQueryText = searchQuery;
-      }
-    }
-    return { searchQueryText, searchQueryNumber };
-  }
-  getContacts = () => {
-    const { searchQueryText, searchQueryNumber } = this.parseSearchQuery(
-      this.state.filter.toString(),
-    );
-    if (searchQueryText.length > 0 || searchQueryNumber.length > 0) {
-      let filtredArray = [];
-      //поиск по номеру
-      if (searchQueryNumber.length > 0) {
-        filtredArray = this.state.contacts.filter(({ number }) => {
-          const clearNumberText = this.doClearNumber(number);
-          return clearNumberText.includes(searchQueryNumber);
-        });
-        //комбинированый поиск
-        if (searchQueryText.length > 0) {
-          const namesArray = this.state.contacts.filter(({ name }) =>
-            name.toLowerCase().includes(searchQueryText),
-          );
-          return filtredArray.length > 0 ? filtredArray.concat(namesArray) : namesArray;
-        }
-        return filtredArray;
-      } else {
-        //Поиск по имени
-        filtredArray = this.state.contacts.filter(({ name }) =>
-          name.toLowerCase().includes(searchQueryText),
-        );
-        return filtredArray;
-      }
-    }
-    return this.state.contacts;
-  };
-
-  checkForDoubleID(contacts) {
-    const ids = [];
-    const checked = [];
-    contacts.forEach(contact => {
-      if (ids.indexOf(contact.id) < 0) {
-        ids.push(contact.id);
-        checked.push(contact);
-      }
-    });
-    return checked;
-  }
-
-  getContactsComponent(contacts) {
-    return (
-      <Contacts
-        contacts={contacts}
-        searchFunc={this.makeSearch}
-        deleteFunc={this.doDeleteContact}
-        countContacts={this.countContacts(contacts)}
-        title={
-          this.countContacts() ? 'Sorrry, no contacts found.' : 'Sorrry, you have no contacts yet.'
-        }
-      />
-    );
-  }
-
-  getFormComponent() {
-    return <Form onSubmit={this.onSubmit} />;
-  }
-
   render() {
-    const contacts = this.checkForDoubleID(this.getContacts());
     return (
       <Fragment>
-        <Section title='Phonebook' component={this.getFormComponent()} />
+        <Section
+          title='Phonebook'
+          component='Form'
+          data={this.state}
+          doAddContact={this.doAddContact}
+        />
         <hr />
-        <Section title='Contacts' component={this.getContactsComponent(contacts)} />
+        <Section
+          title='Contacts'
+          component='Contacts'
+          data={this.state}
+          searchFunc={this.makeSearch}
+          deleteFunc={this.doDeleteContact}
+        />
       </Fragment>
     );
   }
 }
+
+export default App;
