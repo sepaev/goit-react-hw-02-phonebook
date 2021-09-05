@@ -17,19 +17,17 @@ export class App extends Component {
       { id: uuidv4(), name: 'Joan Stratfild', number: '+38 (099) 428-21-66' },
     ],
     filter: '',
-    name: '',
-    number: '',
   };
   doAddContact = (name, number) => {
-    Notify.success('Well Done!');
-    this.setState(({ contacts }) => {
+    Notify.success('Well Done! Added ' + name);
+    this.setState(({ contacts, filter }) => {
       const newArr = [...contacts, { id: uuidv4(), name, number }];
-      return { contacts: newArr, name, number };
+      return { contacts: newArr, filter };
     });
   };
 
   doDeleteContact = id => {
-    const { contacts, name, number } = this.state;
+    const { contacts, filter } = this.state;
     const newArr = [];
     let reportName;
     if (!id) return;
@@ -48,7 +46,7 @@ export class App extends Component {
     }
 
     this.setState(() => {
-      return { contacts: newArr, name, number };
+      return { contacts: newArr, filter };
     });
 
     Notify.success(`Contact ${reportName} was errased successfully`);
@@ -56,20 +54,22 @@ export class App extends Component {
 
   checkNumber(inputNumber) {
     const clearNumber = this.doClearNumber(inputNumber);
-    if (clearNumber === this.doClearNumber(this.state.number) || inputNumber === '') return false;
+    let result = true;
+    if (inputNumber === '') result = false;
     this.state.contacts.forEach(({ number }) => {
-      if (clearNumber === this.doClearNumber(number)) return false;
+      if (clearNumber === this.doClearNumber(number)) result = false;
     });
 
-    return true;
+    return result;
   }
   checkName(inputName) {
+    let result = true;
     const clearName = this.doClearName(inputName);
-    if (clearName === this.doClearName(this.state.name) || clearName === '') return false;
+    if (clearName === '') result = false;
     this.state.contacts.forEach(({ name }) => {
-      if (clearName === this.doClearName(name)) return false;
+      if (clearName === this.doClearName(name)) result = false;
     });
-    return true;
+    return result;
   }
   onSubmit = e => {
     e.preventDefault();
@@ -80,7 +80,8 @@ export class App extends Component {
       return;
     }
     if (!this.checkName(inputName)) {
-      if (inputName) Notify.warning('Sorry. This NAME already exists.');
+      // if (inputName) Notify.warning('Sorry. This NAME already exists.');
+      Notify.warning('Sorry. This NAME already exists.');
       return;
     }
     this.doAddContact(inputName, inputNumber);
@@ -104,7 +105,7 @@ export class App extends Component {
   };
 
   doClearName(name) {
-    return name.split(' ').join('').toLowerCase();
+    return name.split(' ').join('').toLowerCase().trim();
   }
 
   parseSearchQuery(searchQuery) {
@@ -123,7 +124,9 @@ export class App extends Component {
     return { searchQueryText, searchQueryNumber };
   }
   getContacts = () => {
-    const { searchQueryText, searchQueryNumber } = this.parseSearchQuery(this.state.filter);
+    const { searchQueryText, searchQueryNumber } = this.parseSearchQuery(
+      this.state.filter.toString(),
+    );
     if (searchQueryText.length > 0 || searchQueryNumber.length > 0) {
       let filtredArray = [];
       //поиск по номеру
